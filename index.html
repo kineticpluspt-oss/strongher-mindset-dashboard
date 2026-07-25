@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StrongHer Mindset — Brand Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #22222f;
+      --border: #2e2e3e;
+      --accent: #c084fc;
+      --accent2: #f472b6;
+      --accent3: #34d399;
+      --text: #f1f0f5;
+      --muted: #8b8aa0;
+      --warn: #fb923c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a24 0%, #22182e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo { display: flex; flex-direction: column; gap: 2px; }
+    .logo h1 { font-size: 22px; font-weight: 700; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo span { font-size: 13px; color: var(--muted); }
+    .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .last-updated { font-size: 12px; color: var(--muted); }
+    .edit-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .edit-btn:hover { opacity: .85; }
+
+    nav {
+      display: flex;
+      gap: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      overflow-x: auto;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+    nav button:hover:not(.active) { color: var(--text); }
+
+    main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    .section-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); }
+    .kpi-sub { font-size: 12px; color: var(--accent3); margin-top: 4px; }
+    .kpi-target { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+    @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-high { background: #1e3a2f; color: var(--accent3); }
+    .badge-med { background: #2d2414; color: var(--warn); }
+    .badge-low { background: #2a1a2e; color: var(--accent); }
+    .badge-threat { background: #2a1515; color: #f87171; }
+
+    .content-week { margin-bottom: 32px; }
+    .week-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px 10px 0 0;
+      padding: 14px 20px;
+    }
+    .week-title { font-size: 14px; font-weight: 700; }
+    .week-theme { font-size: 12px; color: var(--accent); }
+
+    .post-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      padding: 16px;
+    }
+    .post-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .post-type {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 6px;
+    }
+    .post-date { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .post-hook { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+    .post-pillar { font-size: 11px; color: var(--accent); }
+    .post-cta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    .pillar-bar { margin-bottom: 12px; }
+    .pillar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+    .bar-track { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+    .belief-card {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 10px;
+    }
+    .belief-num { font-size: 10px; font-weight: 700; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .08em; }
+    .belief-text { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .belief-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    .gap-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .gap-label { font-size: 11px; font-weight: 700; color: var(--accent3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .gap-text { font-size: 13px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .field-group input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .field-group input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-save {
+      flex: 1;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      flex: 1;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .chart-wrap { position: relative; height: 220px; }
+    .usp-block {
+      background: linear-gradient(135deg, #1e0f2e, #22182e);
+      border: 1px solid #3d2060;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .usp-block .usp-main { font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .usp-block .usp-sub { font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>StrongHer Mindset</h1>
+    <span>@danielletochieng — Brand Strategy Dashboard</span>
+  </div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">Last updated: —</span>
+    <button class="edit-btn" onclick="openModal()">Update My Metrics</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('overview')">Overview</button>
+  <button onclick="showTab('metrics')">My Metrics</button>
+  <button onclick="showTab('competitors')">Competitors</button>
+  <button onclick="showTab('calendar')">Content Calendar</button>
+  <button onclick="showTab('messaging')">Messaging</button>
+  <button onclick="showTab('gaps')">Market Gaps</button>
+</nav>
+
+<main>
+
+  <!-- OVERVIEW TAB -->
+  <div id="tab-overview" class="tab active">
+    <div class="usp-block">
+      <div class="usp-main">"Pelvic floor expert for women who are done recovering and ready to perform."</div>
+      <div class="usp-sub">StrongHer Mindset — Category: Women's Postpartum Performance</div>
+    </div>
+
+    <p class="section-title">My Account — Key Numbers</p>
+    <div class="kpi-grid" id="overviewKpis"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Follower Growth</h3>
+        <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Content Performance by Pillar</h3>
+        <div id="pillarBars"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Competitor Snapshot</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Account</th><th>Followers</th><th>Core Focus</th><th>Threat Level</th><th>Your Gap vs Them</th>
+          </tr>
+        </thead>
+        <tbody id="compSnapshotTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- METRICS TAB -->
+  <div id="tab-metrics" class="tab">
+    <p class="section-title">My Performance Metrics</p>
+    <div class="kpi-grid" id="metricsKpis"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Follower Growth Over Time</h3>
+        <div class="chart-wrap"><canvas id="growthChart2"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Engagement Breakdown</h3>
+        <div class="chart-wrap"><canvas id="engagementChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Monthly KPI Targets vs Actuals</h3>
+      <table>
+        <thead><tr><th>Metric</th><th>Baseline</th><th>Target (Aug)</th><th>Actual</th><th>Status</th></tr></thead>
+        <tbody id="kpiTargetTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPETITORS TAB -->
+  <div id="tab-competitors" class="tab">
+    <p class="section-title">Competitor Intelligence</p>
+    <div class="card">
+      <h3>Full Competitor Breakdown</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Account</th><th>Followers</th><th>Focus</th><th>Offers</th><th>Podcast</th><th>Strength</th><th>Weakness</th><th>Threat</th>
+          </tr>
+        </thead>
+        <tbody id="fullCompTable"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Category Ownership Map</h3>
+      <table>
+        <thead><tr><th>Category</th><th>Who Owns It</th><th>Gap Level</th><th>Your Opportunity</th></tr></thead>
+        <tbody id="categoryTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONTENT CALENDAR TAB -->
+  <div id="tab-calendar" class="tab">
+    <p class="section-title">August 2026 — Content Calendar</p>
+    <div id="calendarWeeks"></div>
+  </div>
+
+  <!-- MESSAGING TAB -->
+  <div id="tab-messaging" class="tab">
+    <p class="section-title">Brand Messaging Framework</p>
+
+    <div class="card">
+      <h3>Brand Pillars</h3>
+      <div id="pillarsDetail"></div>
+    </div>
+
+    <div class="card">
+      <h3>Core Beliefs</h3>
+      <div id="beliefsDetail"></div>
+    </div>
+
+    <div class="card">
+      <h3>Audience Language Bank — Their Words</h3>
+      <div class="grid-2">
+        <div>
+          <p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px;">HOW THEY DESCRIBE THEIR PROBLEMS</p>
+          <ul style="list-style:none;" id="audiencePainList"></ul>
+        </div>
+        <div>
+          <p style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px;">WHAT THEY WANT</p>
+          <ul style="list-style:none;" id="audienceWantList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tone Guide</h3>
+      <div class="grid-2">
+        <div>
+          <p style="font-size:12px;color:var(--accent3);font-weight:700;margin-bottom:10px;">ALWAYS</p>
+          <ul style="list-style:none;" id="toneAlwaysList"></ul>
+        </div>
+        <div>
+          <p style="font-size:12px;color:#f87171;font-weight:700;margin-bottom:10px;">NEVER</p>
+          <ul style="list-style:none;" id="toneNeverList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET GAPS TAB -->
+  <div id="tab-gaps" class="tab">
+    <p class="section-title">Content Opportunity & Market Gap Report</p>
+    <div class="card">
+      <h3>Top Content Gaps in the Market</h3>
+      <div id="gapsList"></div>
+    </div>
+    <div class="card">
+      <h3>Priority Content Angles for @danielletochieng</h3>
+      <div id="anglesList"></div>
+    </div>
+    <div class="card">
+      <h3>Category Ownership Milestones</h3>
+      <table>
+        <thead><tr><th>Timeline</th><th>Milestone</th></tr></thead>
+        <tbody id="milestonesTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Update Metrics Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>Update My Metrics</h2>
+    <div class="field-group"><label>Followers</label><input type="number" id="inp-followers" placeholder="e.g. 4200" /></div>
+    <div class="field-group"><label>Avg Reel Reach</label><input type="number" id="inp-reach" placeholder="e.g. 1500" /></div>
+    <div class="field-group"><label>Avg Saves per Reel</label><input type="number" id="inp-saves" placeholder="e.g. 45" /></div>
+    <div class="field-group"><label>DMs per Week</label><input type="number" id="inp-dms" placeholder="e.g. 12" /></div>
+    <div class="field-group"><label>Consultation Requests (this month)</label><input type="number" id="inp-consults" placeholder="e.g. 6" /></div>
+    <div class="field-group"><label>Link in Bio Clicks (per week)</label><input type="number" id="inp-linkclicks" placeholder="e.g. 38" /></div>
+    <div class="field-group"><label>Active Coaching Clients</label><input type="number" id="inp-clients" placeholder="e.g. 8" /></div>
+    <div class="field-group"><label>Membership Members</label><input type="number" id="inp-members" placeholder="e.g. 24" /></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveMetrics()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA STORE ───────────────────────────────────────────────────────────────
+const DEFAULT_METRICS = {
+  followers: 0, reach: 0, saves: 0, dms: 0,
+  consults: 0, linkclicks: 0, clients: 0, members: 0,
+  growthHistory: [],
+  lastUpdated: null
+};
+
+function loadMetrics() {
+  try {
+    return JSON.parse(localStorage.getItem('shm_metrics') || 'null') || DEFAULT_METRICS;
+  } catch { return DEFAULT_METRICS; }
+}
+
+function saveMetricsData(m) {
+  m.lastUpdated = new Date().toISOString();
+  localStorage.setItem('shm_metrics', JSON.stringify(m));
+}
+
+let metrics = loadMetrics();
+
+// ─── STATIC DATA ──────────────────────────────────────────────────────────────
+const competitors = [
+  { handle: '@vaginarehabdoctor', followers: '248K', focus: 'Vaginismus / Sexual pain', offers: 'Telehealth, e-guides, challenge, podcast', podcast: 'Yes', strength: 'Memorable brand, deep niche, high intent', weakness: 'Narrow niche — no fitness/performance angle', threat: 'low' },
+  { handle: '@dr.gabi.xoxo', followers: '3.8K', focus: 'Pregnancy & postpartum (in-clinic)', offers: 'In-person PT only', podcast: 'No', strength: 'Warm, relatable', weakness: 'No digital model, no content strategy', threat: 'low' },
+  { handle: '@yourpostpartumpt', followers: '55K', focus: 'Postpartum rehab + strength', offers: 'Virtual 1:1, programs, podcast', podcast: 'Yes', strength: '750+ clients, virtual, return-to-sport coverage', weakness: 'Clinical tone, no aspirational/emotional framing', threat: 'med' },
+  { handle: '@the.vagina.whisperer', followers: '753K', focus: 'Full lifecycle pelvic health', offers: 'V-Hive platform, book (FLOORED), virtual', podcast: 'Yes', strength: 'Largest brand, media presence, book deal', weakness: 'Breadth = no deep athletic identity ownership', threat: 'high' },
+  { handle: '@thedowntheredoc', followers: '200K', focus: 'Birth prep / tear prevention', offers: 'PT services, content', podcast: 'Unknown', strength: '15+ yrs experience, strong authority', weakness: 'Does not serve 1–10yr postpartum performance woman', threat: 'med' },
+  { handle: '@docjenfitness', followers: '98K', focus: 'Pregnancy + postpartum PT', offers: 'Coaching', podcast: 'Unknown', strength: 'Credentialed, combines PT + strength', weakness: 'Does not own athletic identity narrative', threat: 'med' },
+];
+
+const categories = [
+  { cat: 'Vaginismus / Sexual pain', owner: '@vaginarehabdoctor', gap: 'low', opp: 'Do not compete here' },
+  { cat: 'Full lifecycle pelvic health', owner: '@the.vagina.whisperer', gap: 'low', opp: 'Do not compete here' },
+  { cat: 'Birth prep / tear prevention', owner: '@thedowntheredoc', gap: 'med', opp: 'Adjacent only' },
+  { cat: 'Postpartum PT (clinical)', owner: '@yourpostpartumpt', gap: 'med', opp: 'Differentiate emotionally' },
+  { cat: 'Women\'s performance + pelvic health', owner: 'NOBODY', gap: 'high', opp: '🎯 OWN THIS' },
+  { cat: 'Athletic identity postpartum', owner: 'NOBODY', gap: 'high', opp: '🎯 OWN THIS' },
+  { cat: 'Postpartum 2–10 year gap', owner: 'NOBODY', gap: 'high', opp: '🎯 OWN THIS' },
+  { cat: 'Pelvic health + confidence', owner: 'NOBODY', gap: 'high', opp: '🎯 OWN THIS' },
+  { cat: 'Women\'s health media brand', owner: 'Nobody at scale', gap: 'high', opp: '🎯 Long-term play' },
+];
+
+const kpiTargets = [
+  { metric: 'Followers', baseline: '—', target: '+200–400', actual: () => metrics.followers || '—', good: v => v > 200 },
+  { metric: 'Avg Reel Reach', baseline: '—', target: '+20%', actual: () => metrics.reach || '—', good: () => true },
+  { metric: 'Saves per Reel', baseline: '—', target: '50+', actual: () => metrics.saves || '—', good: v => v >= 50 },
+  { metric: 'DMs per Week', baseline: '—', target: '20+', actual: () => metrics.dms || '—', good: v => v >= 20 },
+  { metric: 'Consultation Requests', baseline: '—', target: '5–10', actual: () => metrics.consults || '—', good: v => v >= 5 },
+  { metric: 'Link in Bio Clicks/wk', baseline: '—', target: '50+', actual: () => metrics.linkclicks || '—', good: v => v >= 50 },
+];
+
+const calendarWeeks = [
+  {
+    week: 'Week 1 — Aug 4–10', theme: '"You Were Not Told the Truth"',
+    objective: 'Establish authority. Hook algorithm with myth-busting. Drive saves & shares.',
+    posts: [
+      { type: 'Reel', date: 'Mon Aug 4', pillar: 'Myth-Busting', hook: '"Your OB cleared you at 6 weeks. That doesn\'t mean you\'re ready to run."', cta: 'Save + share with a postpartum friend' },
+      { type: 'Reel', date: 'Wed Aug 6', pillar: 'Education', hook: '"Why your lower belly still looks pregnant — and it has nothing to do with diet"', cta: 'DM "CORE" for more info' },
+      { type: 'Carousel', date: 'Thu Aug 7', pillar: 'Education', hook: '"5 Signs Your Pelvic Floor Is Affecting Your Workouts"', cta: 'Save + send to a workout friend' },
+      { type: 'Reel', date: 'Fri Aug 8', pillar: 'Identity + Emotion', hook: '"She told me she hadn\'t jumped on a trampoline with her kids in 4 years."', cta: 'Link in bio to book a call' },
+      { type: 'Reel', date: 'Sun Aug 10', pillar: 'Performance', hook: '"The pelvic floor cue that actually helps when you\'re lifting heavy"', cta: 'Save + comment what you feel' },
+    ]
+  },
+  {
+    week: 'Week 2 — Aug 11–17', theme: '"The Performance Standard"',
+    objective: 'Attract the athletic identity woman. Establish performance framing. Drive DMs + consultations.',
+    posts: [
+      { type: 'Reel', date: 'Mon Aug 11', pillar: 'Myth-Busting', hook: '"Leaking during CrossFit is not a badge of honor. It\'s a signal."', cta: 'DM me CROSSFIT' },
+      { type: 'Reel', date: 'Wed Aug 13', pillar: 'Education', hook: '"What nobody tells you about running postpartum"', cta: 'Save this before your next run' },
+      { type: 'Carousel', date: 'Thu Aug 14', pillar: 'Performance', hook: '"Return to Running Postpartum: The Real Checklist"', cta: 'Save + share' },
+      { type: 'Reel', date: 'Fri Aug 15', pillar: 'Client Story', hook: '"She came to me 5 years postpartum. Her OB had told her three times it was normal."', cta: 'Link in bio to book a call' },
+      { type: 'Reel', date: 'Sun Aug 17', pillar: 'Identity + Emotion', hook: '"You are not a different person than before kids. You just need different support."', cta: 'Save this for the days you need a reminder' },
+    ]
+  },
+  {
+    week: 'Week 3 — Aug 18–24', theme: '"The Woman Nobody Is Talking To"',
+    objective: 'Directly address the 3–10 year postpartum woman. Drive community + DMs.',
+    posts: [
+      { type: 'Reel', date: 'Mon Aug 18', pillar: 'Identity + Emotion', hook: '"This one\'s for the woman who is 4 years postpartum and still Googling \'is it normal to leak\'"', cta: 'Comment STILL ME if this is you' },
+      { type: 'Reel', date: 'Wed Aug 20', pillar: 'Myth-Busting', hook: '"Kegels are not the answer to everything. For some women they make things worse."', cta: 'Save + stop doing Kegels until you\'ve watched this' },
+      { type: 'Carousel', date: 'Thu Aug 21', pillar: 'Identity', hook: '"Dear Woman Who Is Still Dealing With This Years Later: A Letter From Your Pelvic Floor PT"', cta: 'Share with a woman who needs this' },
+      { type: 'Reel', date: 'Fri Aug 22', pillar: 'Performance', hook: '"How to know if your core is actually working during a workout — in 30 seconds"', cta: 'Try this + comment what you feel' },
+      { type: 'Reel', date: 'Sun Aug 24', pillar: 'Education', hook: '"Prolapse explained in 60 seconds — without making you panic"', cta: 'Save + DM me PROLAPSE with questions' },
+    ]
+  },
+  {
+    week: 'Week 4 — Aug 25–31', theme: '"What\'s Possible"',
+    objective: 'End month on aspiration. Paint the picture of what life looks like on the other side. Drive sign-ups.',
+    posts: [
+      { type: 'Reel', date: 'Mon Aug 25', pillar: 'Client Story', hook: '"She used to plan her whole workout around what wouldn\'t make her leak. Now she competes."', cta: 'Link in bio. Let\'s build your story.' },
+      { type: 'Reel', date: 'Wed Aug 27', pillar: 'Education', hook: '"The postpartum core timeline nobody gives you"', cta: 'Save — it\'s the timeline your OB should have given you' },
+      { type: 'Carousel', date: 'Thu Aug 28', pillar: 'Aspiration', hook: '"What Life Looks Like When Your Pelvic Floor Is Working For You"', cta: 'Save + share' },
+      { type: 'Reel', date: 'Fri Aug 29', pillar: 'Myth-Busting', hook: '"Stop blaming your diet for your postpartum belly"', cta: 'Save + share with someone who needs this' },
+      { type: 'Reel', date: 'Sun Aug 31', pillar: 'Identity + Emotion', hook: '"You don\'t have to earn your body back. You just have to give it what it actually needs."', cta: 'Link in bio. If you\'re ready, I\'m here.' },
+    ]
+  },
+];
+
+const pillars = [
+  { name: 'Education', color: '#c084fc', pct: 25, desc: 'Clinical, evidence-based content about pelvic floor, postpartum physiology, and core rehab. Builds trust and positions you as the expert.' },
+  { name: 'Myth-Busting', color: '#f472b6', pct: 25, desc: 'Direct dismantling of bad advice and low standards. Creates shares, saves, and strong reactions. Signals confidence.' },
+  { name: 'Client Transformation', color: '#34d399', pct: 20, desc: 'Performance-oriented client outcomes. Makes pelvic floor rehab feel concrete and achievable to your target audience.' },
+  { name: 'Identity + Emotion', color: '#fb923c', pct: 20, desc: 'Speaks to the emotional experience of postpartum dysfunction. Creates DMs, saves, and shares. Converts followers to community.' },
+  { name: 'Performance + Movement', color: '#60a5fa', pct: 10, desc: 'Bridges pelvic health with athletic performance. This is the differentiator. Nobody else owns this angle.' },
+];
+
+const beliefs = [
+  { num: '01', text: 'Pelvic floor dysfunction is a performance issue, not just a medical one.', desc: 'It affects how you move, train, perform, and show up in your life. Treating it as only a medical problem undersells what\'s at stake.' },
+  { num: '02', text: '"Normal" is not the same as "acceptable."', desc: 'Yes, leaking after childbirth is common. That does not make it something women should accept. Common ≠ inevitable.' },
+  { num: '03', text: 'The postpartum window doesn\'t close at 12 weeks — or 12 months.', desc: 'Women 3, 5, 7 years postpartum are still carrying dysfunction that was never addressed. It is never too late to rebuild.' },
+  { num: '04', text: 'Strong and functional are not opposites.', desc: 'You do not have to choose between training hard and having a healthy pelvic floor. Performance and function amplify each other.' },
+  { num: '05', text: 'Women deserve specificity, not generic advice.', desc: '"Do your Kegels" is not good enough. Women deserve evidence-based, individualized guidance — and they are smart enough to understand it.' },
+  { num: '06', text: 'Athletic identity is worth fighting for.', desc: 'The woman who ran marathons and felt powerful in her body — that identity doesn\'t disappear after kids. It\'s worth reclaiming.' },
+  { num: '07', text: 'Feeling dismissed by healthcare is a systemic failure — not a personal one.', desc: 'When a woman is told her symptoms are normal and sent home, the system failed her. This removes shame and positions you as the advocate she never got.' },
+];
+
+const audiencePains = [
+  '"I leak every time I jump"',
+  '"My belly still looks 6 months pregnant and my baby is 3"',
+  '"I feel like a stranger in my own body"',
+  '"My doctor said it was normal and just sent me home"',
+  '"I want to run again but I\'m scared"',
+  '"I can\'t do burpees without embarrassing myself"',
+  '"My core just doesn\'t work the same"',
+  '"I just thought this was my life now"',
+];
+
+const audienceWants = [
+  '"I want to feel like myself again"',
+  '"I want to run without thinking about it"',
+  '"I want to feel strong, not just skinny"',
+  '"I want to be able to keep up with my kids"',
+  '"I just want my body back"',
+  '"I want to feel sexy again"',
+  '"I want to stop being afraid of my workouts"',
+];
+
+const toneAlways = ['Confident without arrogance', 'Direct without being cold', 'Clinical without being boring', 'Empathetic without being soft', 'Slightly polarizing', 'Evidence-based', 'Funny when genuine'];
+const toneNever = ['Fearmonger or catastrophize', 'Talk down to the audience', 'Use shame or guilt', 'Be vague or hedge excessively', 'Use jargon without explanation', 'Sound like a textbook', 'Chase trends that don\'t serve the brand'];
+
+const gaps = [
+  { label: 'Athletic Identity Reclamation', text: 'Content for women who WERE athletes and want to return — not just recover.' },
+  { label: 'The Emotional Side of Pelvic Dysfunction', text: 'Feeling dismissed, embarrassed, alone. This emotional territory is largely unclaimed.' },
+  { label: 'Performance with Pelvic Health', text: 'How to train HARD and have a functional pelvic floor. Not just survive — thrive.' },
+  { label: 'The 2–10 Year Postpartum Gap', text: 'Most content targets 0–12 months. The woman still struggling at year 3 has nobody.' },
+  { label: 'Pelvic Health + Confidence', text: 'Body image, intimacy, feeling sexy and strong. This intersection is underserved.' },
+  { label: 'Myth-Busting for High-Performing Women', text: '"Just do more Kegels" / "Push through" / "It\'s normal to leak during workouts."' },
+  { label: 'The Dismissed Woman', text: 'She saw 3 doctors, was told it\'s normal, and gave up. She needs a champion.' },
+];
+
+const angles = [
+  '"Nobody told me this would still be happening at 3 years postpartum"',
+  '"Your pelvic floor is why your workouts aren\'t working"',
+  '"What your trainer doesn\'t know about your postpartum body"',
+  '"You don\'t have to choose between lifting heavy and not leaking"',
+  '"You were an athlete before kids. You can be one again."',
+  '"The myth that Kegels fix everything"',
+  '"Why your core looks \'soft\' even though you\'re working out"',
+];
+
+const milestones = [
+  { timeline: 'Month 1–3', text: 'Establish content pillars, post consistently, build hook library' },
+  { timeline: 'Month 3–6', text: 'Launch podcast, establish recurring content series, grow follower base' },
+  { timeline: 'Month 6–12', text: 'Guest podcast appearances, press features, cross-promos with aligned brands' },
+  { timeline: 'Year 2', text: 'Book, course, or large digital product launch; speaking engagements; media features' },
+  { timeline: 'Year 3', text: 'Recognized category owner — "postpartum performance" = @danielletochieng' },
+];
+
+// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
+
+function renderOverviewKpis() {
+  const kpis = [
+    { label: 'Followers', value: metrics.followers || '—', sub: 'Target: +200–400/mo' },
+    { label: 'Avg Reel Reach', value: metrics.reach || '—', sub: 'Target: +20% MoM' },
+    { label: 'Saves per Reel', value: metrics.saves || '—', sub: 'Target: 50+' },
+    { label: 'DMs per Week', value: metrics.dms || '—', sub: 'Target: 20+' },
+    { label: 'Coaching Clients', value: metrics.clients || '—', sub: 'Active 1:1 clients' },
+    { label: 'Membership', value: metrics.members || '—', sub: 'Active members' },
+  ];
+  document.getElementById('overviewKpis').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-target">${k.sub}</div>
+    </div>`).join('');
+}
+
+function renderMetricsKpis() {
+  const kpis = [
+    { label: 'Followers', value: metrics.followers || '—' },
+    { label: 'Avg Reel Reach', value: metrics.reach || '—' },
+    { label: 'Saves / Reel', value: metrics.saves || '—' },
+    { label: 'DMs / Week', value: metrics.dms || '—' },
+    { label: 'Consultations', value: metrics.consults || '—' },
+    { label: 'Link Clicks/wk', value: metrics.linkclicks || '—' },
+    { label: 'Coaching Clients', value: metrics.clients || '—' },
+    { label: 'Members', value: metrics.members || '—' },
+  ];
+  document.getElementById('metricsKpis').innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+    </div>`).join('');
+}
+
+function renderPillarBars(id) {
+  document.getElementById(id || 'pillarBars').innerHTML = pillars.map(p => `
+    <div class="pillar-bar">
+      <div class="pillar-label"><span>${p.name}</span><span>${p.pct}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p.pct * 4}%;background:${p.color}"></div></div>
+    </div>`).join('');
+}
+
+function renderCompSnapshotTable() {
+  document.getElementById('compSnapshotTable').innerHTML = competitors.map(c => {
+    const badge = c.threat === 'high' ? 'badge-threat' : c.threat === 'med' ? 'badge-med' : 'badge-low';
+    const label = c.threat === 'high' ? 'High' : c.threat === 'med' ? 'Medium' : 'Low';
+    const gaps = c.weakness;
+    return `<tr>
+      <td><strong>${c.handle}</strong></td>
+      <td>${c.followers}</td>
+      <td>${c.focus}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td style="color:var(--muted);font-size:12px">${gaps}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFullCompTable() {
+  document.getElementById('fullCompTable').innerHTML = competitors.map(c => {
+    const badge = c.threat === 'high' ? 'badge-threat' : c.threat === 'med' ? 'badge-med' : 'badge-low';
+    const label = c.threat === 'high' ? 'High' : c.threat === 'med' ? 'Medium' : 'Low';
+    return `<tr>
+      <td><strong>${c.handle}</strong></td>
+      <td>${c.followers}</td>
+      <td>${c.focus}</td>
+      <td style="font-size:12px">${c.offers}</td>
+      <td>${c.podcast}</td>
+      <td style="font-size:12px;color:var(--accent3)">${c.strength}</td>
+      <td style="font-size:12px;color:var(--muted)">${c.weakness}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCategoryTable() {
+  document.getElementById('categoryTable').innerHTML = categories.map(c => {
+    const badge = c.gap === 'high' ? 'badge-high' : c.gap === 'med' ? 'badge-med' : 'badge-low';
+    const label = c.gap === 'high' ? 'HIGH ✦' : c.gap === 'med' ? 'Medium' : 'Low';
+    return `<tr>
+      <td>${c.cat}</td>
+      <td style="color:var(--muted)">${c.owner}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td style="font-weight:600">${c.opp}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCalendar() {
+  document.getElementById('calendarWeeks').innerHTML = calendarWeeks.map(w => `
+    <div class="content-week">
+      <div class="week-header">
+        <span class="week-title">${w.week}</span>
+        <span class="week-theme">${w.theme}</span>
+      </div>
+      <div class="post-grid">
+        ${w.posts.map(p => `
+          <div class="post-card">
+            <div class="post-type">${p.type}</div>
+            <div class="post-date">${p.date}</div>
+            <div class="post-hook">${p.hook}</div>
+            <div class="post-pillar">📌 ${p.pillar}</div>
+            <div class="post-cta">CTA: ${p.cta}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderMessaging() {
+  document.getElementById('pillarsDetail').innerHTML = pillars.map(p => `
+    <div class="belief-card" style="border-left-color:${p.color}">
+      <div class="belief-num" style="color:${p.color}">${p.name} — ${p.pct}% of content</div>
+      <div class="belief-desc">${p.desc}</div>
+    </div>`).join('');
+
+  document.getElementById('beliefsDetail').innerHTML = beliefs.map(b => `
+    <div class="belief-card">
+      <div class="belief-num">BELIEF ${b.num}</div>
+      <div class="belief-text">${b.text}</div>
+      <div class="belief-desc">${b.desc}</div>
+    </div>`).join('');
+
+  document.getElementById('audiencePainList').innerHTML = audiencePains.map(p =>
+    `<li style="font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border)">${p}</li>`).join('');
+  document.getElementById('audienceWantList').innerHTML = audienceWants.map(p =>
+    `<li style="font-size:13px;color:var(--accent3);padding:6px 0;border-bottom:1px solid var(--border)">${p}</li>`).join('');
+
+  document.getElementById('toneAlwaysList').innerHTML = toneAlways.map(t =>
+    `<li style="font-size:13px;padding:5px 0;color:var(--text)">✓ ${t}</li>`).join('');
+  document.getElementById('toneNeverList').innerHTML = toneNever.map(t =>
+    `<li style="font-size:13px;padding:5px 0;color:var(--muted)">✗ ${t}</li>`).join('');
+}
+
+function renderGaps() {
+  document.getElementById('gapsList').innerHTML = gaps.map(g => `
+    <div class="gap-card">
+      <div class="gap-label">${g.label}</div>
+      <div class="gap-text">${g.text}</div>
+    </div>`).join('');
+
+  document.getElementById('anglesList').innerHTML = angles.map(a => `
+    <div class="gap-card" style="border-color:#3d2060">
+      <div class="gap-text" style="font-weight:600">${a}</div>
+    </div>`).join('');
+
+  document.getElementById('milestonesTable').innerHTML = milestones.map(m => `
+    <tr><td style="font-weight:700;color:var(--accent);white-space:nowrap">${m.timeline}</td><td>${m.text}</td></tr>`).join('');
+}
+
+function renderKpiTargets() {
+  document.getElementById('kpiTargetTable').innerHTML = kpiTargets.map(k => {
+    const actual = k.actual();
+    const status = actual === '—' ? `<span class="badge badge-low">No data yet</span>` :
+      k.good(actual) ? `<span class="badge badge-high">On Track</span>` : `<span class="badge badge-med">Below Target</span>`;
+    return `<tr>
+      <td>${k.metric}</td>
+      <td style="color:var(--muted)">${k.baseline}</td>
+      <td style="color:var(--accent)">${k.target}</td>
+      <td style="font-weight:700">${actual}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCharts() {
+  const hist = metrics.growthHistory || [];
+  const labels = hist.map(h => h.date);
+  const data = hist.map(h => h.followers);
+
+  ['growthChart', 'growthChart2'].forEach(id => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    if (canvas._chart) canvas._chart.destroy();
+    canvas._chart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels.length ? labels : ['Start'],
+        datasets: [{
+          label: 'Followers',
+          data: data.length ? data : [0],
+          borderColor: '#c084fc',
+          backgroundColor: 'rgba(192,132,252,0.1)',
+          tension: 0.4, fill: true, pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#8b8aa0' }, grid: { color: '#2e2e3e' } },
+          y: { ticks: { color: '#8b8aa0' }, grid: { color: '#2e2e3e' } }
+        }
+      }
+    });
+  });
+
+  const engCanvas = document.getElementById('engagementChart');
+  if (engCanvas) {
+    if (engCanvas._chart) engCanvas._chart.destroy();
+    engCanvas._chart = new Chart(engCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Saves', 'DMs', 'Link Clicks', 'Consults'],
+        datasets: [{
+          data: [metrics.saves || 1, metrics.dms || 1, metrics.linkclicks || 1, metrics.consults || 1],
+          backgroundColor: ['#c084fc', '#f472b6', '#34d399', '#fb923c'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: '#8b8aa0', font: { size: 11 } } } }
+      }
+    });
+  }
+}
+
+function updateLastUpdated() {
+  const el = document.getElementById('lastUpdated');
+  if (metrics.lastUpdated) {
+    el.textContent = 'Last updated: ' + new Date(metrics.lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } else {
+    el.textContent = 'Last updated: — (click Update My Metrics)';
+  }
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('inp-followers').value = metrics.followers || '';
+  document.getElementById('inp-reach').value = metrics.reach || '';
+  document.getElementById('inp-saves').value = metrics.saves || '';
+  document.getElementById('inp-dms').value = metrics.dms || '';
+  document.getElementById('inp-consults').value = metrics.consults || '';
+  document.getElementById('inp-linkclicks').value = metrics.linkclicks || '';
+  document.getElementById('inp-clients').value = metrics.clients || '';
+  document.getElementById('inp-members').value = metrics.members || '';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function saveMetrics() {
+  const prev = metrics.followers;
+  metrics.followers = parseInt(document.getElementById('inp-followers').value) || 0;
+  metrics.reach = parseInt(document.getElementById('inp-reach').value) || 0;
+  metrics.saves = parseInt(document.getElementById('inp-saves').value) || 0;
+  metrics.dms = parseInt(document.getElementById('inp-dms').value) || 0;
+  metrics.consults = parseInt(document.getElementById('inp-consults').value) || 0;
+  metrics.linkclicks = parseInt(document.getElementById('inp-linkclicks').value) || 0;
+  metrics.clients = parseInt(document.getElementById('inp-clients').value) || 0;
+  metrics.members = parseInt(document.getElementById('inp-members').value) || 0;
+  if (metrics.followers && metrics.followers !== prev) {
+    if (!metrics.growthHistory) metrics.growthHistory = [];
+    metrics.growthHistory.push({ date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), followers: metrics.followers });
+    if (metrics.growthHistory.length > 12) metrics.growthHistory.shift();
+  }
+  saveMetricsData(metrics);
+  closeModal();
+  renderAll();
+}
+
+// ─── TAB NAVIGATION ───────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  setTimeout(renderCharts, 100);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderOverviewKpis();
+  renderMetricsKpis();
+  renderPillarBars('pillarBars');
+  renderCompSnapshotTable();
+  renderFullCompTable();
+  renderCategoryTable();
+  renderCalendar();
+  renderMessaging();
+  renderGaps();
+  renderKpiTargets();
+  updateLastUpdated();
+  setTimeout(renderCharts, 100);
+}
+
+renderAll();
+</script>
+</body>
+</html>
